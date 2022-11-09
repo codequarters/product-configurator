@@ -380,7 +380,7 @@ class ProductConfigurator(models.TransientModel):
         selection="get_state_selection", default="select", string="State"
     )
 
-    overwrite_variant = fields.Boolean('Update existing variant')
+    overwrite_variant = fields.Boolean('Update existing variant', default=True)
 
     @api.onchange("state")
     def _onchange_state(self):
