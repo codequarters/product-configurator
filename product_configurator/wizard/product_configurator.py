@@ -1029,10 +1029,7 @@ class ProductConfigurator(models.TransientModel):
         step_to_open = self.config_session_id.check_and_open_incomplete_step()
         if step_to_open:
             return self.open_step(step_to_open)
-        if self.overwrite_variant:
-            self.config_session_id.action_confirm(self.product_id)
-        else:
-            self.config_session_id.action_confirm()
+        self.config_session_id.action_confirm(self.overwrite_variant and self.product_id or None)
         variant = self.config_session_id.product_id
         action = {
             "type": "ir.actions.act_window",
