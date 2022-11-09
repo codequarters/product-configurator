@@ -70,6 +70,7 @@
                                 widget='monetary'
                                 options="{'currency_field': 'currency_id', 'field_digits': True}"
                             />
+                            <field name="overwrite_variant" attrs="{'invisible':[('product_id', '=', False)]}"/>
                         </group>
                     </group>
                 </sheet>

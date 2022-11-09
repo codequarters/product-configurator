@@ -495,6 +495,9 @@ class ProductConfigSession(models.Model):
         for session in self:
             if product_id is None:
                 product_id = session.create_get_variant()
+            else:
+               session.update_get_variant(product_id=product_id)
+
             session.write({"state": "done", "product_id": product_id.id})
         return True
 
@@ -750,6 +753,49 @@ class ProductConfigSession(models.Model):
 
         variant.message_post(
             body=_("Product created via configuration wizard"),
+            author_id=self.env.user.partner_id.id,
+        )
+
+        return variant
+
+    def update_get_variant(self, value_ids=None, custom_vals=None, product_id=None):
+        """Updates an existing product variant with the attributes passed
+        via value_ids and custom_values or retrieves an existing
+        one based on search result
+
+            :param value_ids: list of product.attribute.values ids
+            :param custom_vals: dict {product.attribute.id: custom_value}
+
+            :returns: new/existing product.product recordset
+
+        """
+        if self.product_tmpl_id.config_ok:
+            self.validate_configuration()
+        if value_ids is None:
+            value_ids = self.value_ids.ids
+
+        if custom_vals is None:
+            custom_vals = self._get_custom_vals_dict()
+
+        try:
+            self.validate_configuration()
+        except ValidationError as ex:
+            raise ValidationError(_("%s" % ex.name))
+        except Exception:
+            raise ValidationError(_("Invalid Configuration"))
+
+        duplicates = self.search_variant(
+            value_ids=value_ids, product_tmpl_id=self.product_tmpl_id
+        )
+        if duplicates:
+            raise ValidationError(_("Another variant exists with the same configuration"))
+
+        vals = self.get_variant_vals(value_ids, custom_vals)
+        variant = product_id.sudo().with_context(mail_create_nolog=True)
+        variant.write(vals)
+
+        variant.message_post(
+            body=_("Product updated via configuration wizard"),
             author_id=self.env.user.partner_id.id,
         )
 

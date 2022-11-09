@@ -380,6 +380,8 @@ class ProductConfigurator(models.TransientModel):
         selection="get_state_selection", default="select", string="State"
     )
 
+    overwrite_variant = fields.Boolean('Update existing variant')
+
     @api.onchange("state")
     def _onchange_state(self):
         """Save values when change state of wizard by clicking on statusbar"""
@@ -1033,7 +1035,10 @@ class ProductConfigurator(models.TransientModel):
         step_to_open = self.config_session_id.check_and_open_incomplete_step()
         if step_to_open:
             return self.open_step(step_to_open)
-        self.config_session_id.action_confirm()
+        if self.overwrite_variant:
+            self.config_session_id.action_confirm(self.product_id)
+        else:
+            self.config_session_id.action_confirm()
         variant = self.config_session_id.product_id
         action = {
             "type": "ir.actions.act_window",
